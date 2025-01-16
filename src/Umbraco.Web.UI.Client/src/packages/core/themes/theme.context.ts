@@ -1,3 +1,4 @@
+import { UMB_BROADCAST_CONTEXT } from '../broadcast/broadcast.context.js';
 import { loadManifestPlainCss } from '@umbraco-cms/backoffice/extension-api';
 import { umbExtensionsRegistry } from '@umbraco-cms/backoffice/extension-registry';
 import { UmbContextBase } from '@umbraco-cms/backoffice/class-api';
@@ -8,8 +9,10 @@ import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
 import type { UmbObserverController } from '@umbraco-cms/backoffice/observable-api';
 
 const LOCAL_STORAGE_KEY = 'umb-theme-alias';
+const BROADCAST_EVENT_KEY = 'umb:setThemeByAlias';
 
 export class UmbThemeContext extends UmbContextBase<UmbThemeContext> {
+	#broadcast?: typeof UMB_BROADCAST_CONTEXT.TYPE;
 	#theme = new UmbStringState('umb-light-theme');
 	#themeObserver?: UmbObserverController<ManifestTheme[]>;
 
@@ -20,13 +23,22 @@ export class UmbThemeContext extends UmbContextBase<UmbThemeContext> {
 	constructor(host: UmbControllerHost) {
 		super(host, UMB_THEME_CONTEXT);
 
+		this.consumeContext(UMB_BROADCAST_CONTEXT, (broadcast) => {
+			this.#broadcast = broadcast;
+			broadcast.receive(async (event: MessageEvent<{ type: string; data: string }>) => {
+				if (event.data.type === BROADCAST_EVENT_KEY) {
+					this.#setThemeByAlias(event.data.data);
+				}
+			});
+		});
+
 		const storedTheme = localStorage.getItem(LOCAL_STORAGE_KEY);
 		if (storedTheme) {
-			this.setThemeByAlias(storedTheme);
+			this.#setThemeByAlias(storedTheme);
 		}
 	}
 
-	public setThemeByAlias(themeAlias: string) {
+	#setThemeByAlias(themeAlias: string) {
 		this.#theme.setValue(themeAlias);
 
 		this.#themeObserver?.destroy();
@@ -74,6 +86,11 @@ export class UmbThemeContext extends UmbContextBase<UmbThemeContext> {
 			this.#styleElement?.setAttribute('href', '');
 			this.#styleElement = null;
 		}
+	}
+
+	public setThemeByAlias(themeAlias: string) {
+		this.#setThemeByAlias(themeAlias);
+		this.#broadcast?.post(BROADCAST_EVENT_KEY, themeAlias);
 	}
 }
 
