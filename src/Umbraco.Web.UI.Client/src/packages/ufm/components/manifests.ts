@@ -29,4 +29,11 @@ export const manifests: Array<ManifestUfmComponent> = [
 		api: () => import('./link/link.component.js'),
 		meta: { alias: 'umbLink' },
 	},
+	{
+		type: 'ufmComponent',
+		alias: 'Umb.Markdown.JsEval',
+		name: 'JS Eval UFM Component',
+		api: () => import('./js-eval/js-eval.component.js'),
+		meta: { alias: 'js' },
+	},
 ];

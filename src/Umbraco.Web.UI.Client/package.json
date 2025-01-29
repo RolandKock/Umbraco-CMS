@@ -200,6 +200,7 @@
 		"npm": ">=10.1 < 11"
 	},
 	"dependencies": {
+		"@heximal/expressions": "^0.1.5",
 		"@tiptap/core": "2.11.2",
 		"@tiptap/extension-image": "2.11.2",
 		"@tiptap/extension-link": "2.11.2",
